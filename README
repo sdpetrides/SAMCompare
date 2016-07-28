@@ -15,6 +15,10 @@ The script compare.py creates dictionary of SAM headers objects that hold all of
 	-Records
 	-Unmapped Alignments
 
+Version
+
+	Version 1.0 supports only paired end reads. Single end reads inclusion will come with later versions.
+
 Setup
 	- Make sure latest version of python is installed (Python 3.5.1)
 	- $ python3               # check version with terminal command

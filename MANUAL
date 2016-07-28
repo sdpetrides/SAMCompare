@@ -3,14 +3,18 @@ SAMCompare MANUAL
 SAMCompare is written in Python and runs from Python 3.5.1 onward. See README for installation instructions.
 Make sure to run with running with `python3` command. The output is written to stdout.
 
-SAM files must have matching headers or the comparison will not work.
+Input Specifications
+
+	- SAM files must have matching headers.
+	- SAM files must be contain paired end reads. Next version will include single end inclusion.
 
 Commands and Options
 
 	Basic Command Structure:
 
-		$ python3 verify.py <flag> <path>
+		$ python3 compare.py <flag> <path>
 			# Flags can come in any order but must be followed by corresponding information
+			# Running the program without any flags or additional arguments will print the manual
 
 	Flags
 
