@@ -326,24 +326,24 @@ def main():
 
 	manual = [
 		"\nCommands and Options", 
-		"\n\n\tBasic Command Structure:", 
-		"\n\n\t\t$ python3 compare.py <flag> <path>",
-		"\n\t\t\t# Flags can come in any order but must be followed by ", 
+		"\n\n    Basic Command Structure:", 
+		"\n\n\t$ python3 compare.py <flag> <path>",
+		"\n\t\t# Flags can come in any order but must be followed by ", 
 		"corresponding information",
-		"\n\t\t\t# Running the program without any flags or ", 
+		"\n\t\t# Running the program without any flags or ", 
 		"additional arguments will print the manual",
-		"\n\tFlags", 
-		"\n\t\t-man", 
-		"\n\t\t\t# Prints Commands and Options section of MANUAL.", 
-		"\n\t\t-1 <path> (required)",
-		"\n\t\t\t# Followed by the path/to/file_name_1.sam", 
-		"\n\t\t-2 <path> (required)",
-		"\n\t\t\t# Followed by the path/to/file_name_2.sam", 
-		"\n\t\t-ex_count <int> (optional)"
-		"\n\t\t\t# Followed by the number of example alignments to print",
-		"\n\t\t\t# Default is 0 example alignments to print", 
-		"\n\t\t-no_stats (optional)",
-		"\n\t\t\t# Does not print statistics"
+		"\n    Flags", 
+		"\n\t-man", 
+		"\n\t\t# Prints Commands and Options section of MANUAL.", 
+		"\n\t-1 <path> (required)",
+		"\n\t\t# Followed by the path/to/file_name_1.sam", 
+		"\n\t-2 <path> (required)",
+		"\n\t\t# Followed by the path/to/file_name_2.sam", 
+		"\n\t-ex_count <int> (optional)"
+		"\n\t\t# Followed by the number of example alignments to print",
+		"\n\t\t# Default is 0 example alignments to print", 
+		"\n\t-no_stats (optional)",
+		"\n\t\t# Does not print statistics"
 	]
 
 	while param_count <= argc-1:
@@ -385,7 +385,7 @@ def main():
 					"Parameters not entered correctly. " +
 					"See MANUAL for proper syntax.\n" +
 					"Error: "
-					 + param_str
+					+ param_str
 				)
 				sys.exit(0)
 
@@ -402,10 +402,17 @@ def main():
 		fields = line.split()
 		first_word = fields[0]
 		if first_word[0] != '@':
+			FLAG_bin = str(bin(int(fields[1])))
+			if FLAG_bin[-1] == '0':
+				print(
+					"SAM files must contain paired end reads."
+					+ "Error: "
+					+ SAM_1_str
+				)
+				sys.exit(0)
 			header = Header(fields[0])
 			if header.header_name in master_dict_1:
 				header = master_dict_1[header.header_name]
-				FLAG_bin = str(bin(int(fields[1])))
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
@@ -415,7 +422,6 @@ def main():
 					)
 				master_dict_1[header.header_name] = header
 			else:
-				FLAG_bin = str(bin(int(fields[1])))
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
@@ -433,10 +439,17 @@ def main():
 		fields = line.split()
 		first_word = fields[0]
 		if first_word[0] != '@':
+			FLAG_bin = str(bin(int(fields[1])))
+			if FLAG_bin[-1] == '0':
+				print(
+					"SAM files must contain paired end reads."
+					+ "Error: "
+					+ SAM_2_str
+				)
+				sys.exit(0)
 			header = Header(fields[0])
 			if header.header_name in master_dict_2:
 				header = master_dict_2[header.header_name]
-				FLAG_bin = str(bin(int(fields[1])))
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
@@ -446,7 +459,6 @@ def main():
 					)
 				master_dict_2[header.header_name] = header
 			else:
-				FLAG_bin = str(bin(int(fields[1])))
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
