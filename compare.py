@@ -113,12 +113,12 @@ class Header:
 
 		return True
 
-def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
+def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 	try:
-		if FLAG_bit == '1':
+		if FLAG_int & 64:
 			header.add_record(
 				SAMecord(
-					FLAG_bin, 
+					str(bin(FLAG_int)), 
 					fields[2], 
 					fields[3], 
 					fields[4], 
@@ -133,7 +133,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
 		else:
 			header.add_record(
 				SAMRecord(
-					FLAG_bin, 
+					str(bin(FLAG_int)),
 					fields[2], 
 					fields[3], 
 					fields[4], 
@@ -146,10 +146,10 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
 				2,
 			)
 	except:
-		if FLAG_bit == '1':
+		if FLAG_int & 64:
 			header.add_record(
 				SAMRecord(
-					FLAG_bin, 
+					str(bin(FLAG_int)), 
 					fields[2], 
 					fields[3], 
 					fields[4], 
@@ -160,7 +160,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
 		else:
 			header.add_record(
 				SAMRecord(
-					FLAG_bin, 
+					str(bin(FLAG_int)),
 					fields[2], 
 					fields[3], 
 					fields[4], 
@@ -428,30 +428,22 @@ def main():
 		fields = line.split()
 		first_word = fields[0]
 		if first_word[0] != '@':
-			FLAG_bin = str(bin(int(fields[1])))
-			if FLAG_bin[-1] == '0':
-				print(
-					"SAM files must contain paired end reads."
-					+ "Error: "
-					+ SAM_1_str
-				)
-				sys.exit(0)
+			FLAG_int = int(fields[1])
+
 			header = Header(fields[0])
 			if header.header_name in master_dict_1:
 				header = master_dict_1[header.header_name]
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
-					FLAG_bin,
-					FLAG_bin[-7],
+					FLAG_int,
 					1,
 					)
 			else:
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
-					FLAG_bin,
-					FLAG_bin[-7],
+					FLAG_int,
 					1,
 					)
 				master_dict_1[header.header_name] = header
@@ -467,13 +459,7 @@ def main():
 		fields = line.split()
 		first_word = fields[0]
 		if first_word[0] != '@':
-			FLAG_bin = str(bin(int(fields[1])))
-			if FLAG_bin[-1] == '0':
-				print(
-					"SAM files must contain paired end reads."
-					+ "Error: " + SAM_2_str
-				)
-				sys.exit(0)
+			FLAG_int = int(fields[1])
 
 			if (prev_header.header_name == '' 
 				or prev_header.header_name != fields[0]):
@@ -483,8 +469,7 @@ def main():
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
-					FLAG_bin,
-					FLAG_bin[-7],
+					FLAG_int,
 					2,
 					)
 
@@ -500,8 +485,7 @@ def main():
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
-					FLAG_bin,
-					FLAG_bin[-7],
+					FLAG_int,
 					2,
 					)
 			prev_header = header

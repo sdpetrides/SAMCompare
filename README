@@ -17,7 +17,8 @@ The script compare.py creates a dictionary of SAM headers objects that hold all 
 
 Version
 
-	Version 1.0 supports only paired end reads. Single end reads inclusion will come with later versions.
+-Version 1.1 reduces the memory usage by 50% and reduces runtime significantly and supports both paired end and single end reads.
+-Version 1.0 supports only paired end reads.
 
 Setup
 	- Make sure latest version of python is installed (Python 3.5.1)
