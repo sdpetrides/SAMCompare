@@ -17,6 +17,7 @@ The script `compare.py` creates a dictionary of SAM headers objects that hold al
 
 ##Version
 
+Version 1.1 reduces the memory usage by 50% and reduces runtime significantly. Current version.
 Version 1.0 supports only paired end reads. Single end reads inclusion will come with later versions.
 
 ##Setup

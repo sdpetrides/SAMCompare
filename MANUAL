@@ -6,7 +6,7 @@ Make sure to run with running with `python3` command. The output is written to s
 Input Specifications
 
 	- SAM files must have matching headers.
-	- SAM files must be contain paired end reads. Next version will include single end inclusion.
+	- SAM files must contain paired end reads. Next version will include single end inclusion.
 
 Commands and Options
 
@@ -29,8 +29,9 @@ Commands and Options
 			# Followed by the path/to/file_name_2.sam
 
 		-ex_count <int> (optional)
-			# Followed by the number of example alignments to print
-			# Default is 0 example alignments to print
+			# Followed by the number of example alignments to print.
+			# Come from the first <int> headers that differ between files.
+			# Default is 0 example headers to print
 
 		-no_stats (optional)
 			# Does not print statistics

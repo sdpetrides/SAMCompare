@@ -2,7 +2,6 @@
 # @author: Stephen Petrides
 
 import sys
-import random
 
 class SAMRecord:
 	"""Holds necessary information from SAM record"""
@@ -111,6 +110,7 @@ class Header:
 			return False
 
 		diff_dict['No Change']+=1
+
 		return True
 
 def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
@@ -170,17 +170,44 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_bin, FLAG_bit, SAM_file):
 			)
 
 def calc_print_stats():
+	names_1 = [
+		'Headers',
+		'Records',
+		'Records per Header',
+		'Alignments',
+		'Alignments per Header',
+		'Unmapped',
+	]
+
+	names_2 = [
+		'No Change',
+		'Number of Alignments',
+		'Mapped Position',
+	]
+
 	stats_dict_1["Alignments per Header"] = str(
-		stats_dict_1["Alignments"] / stats_dict_1["Headers"]
+		format(
+			stats_dict_1["Alignments"] / stats_dict_1["Headers"],
+			'.3f',
+			)
 		)
 	stats_dict_2["Alignments per Header"] = str(
-		stats_dict_2["Alignments"] / stats_dict_2["Headers"]
+		format(
+			stats_dict_2["Alignments"] / stats_dict_2["Headers"],
+			'.3f',
+			)
 		)
 	stats_dict_1["Records per Header"] = str(
-		stats_dict_1["Records"] / stats_dict_1["Headers"]
+		format(
+			stats_dict_1["Records"] / stats_dict_1["Headers"],
+			'.3f',
+			)
 		)
 	stats_dict_2["Records per Header"] = str(
-		stats_dict_2["Records"] / stats_dict_2["Headers"]
+		format(
+			stats_dict_2["Records"] / stats_dict_2["Headers"],
+			'.3f',
+			) 
 		)
 	stats_dict_1["Unmapped"] = str(
 		stats_dict_1["Records"] - stats_dict_1["Alignments"]
@@ -190,7 +217,7 @@ def calc_print_stats():
 		)
 
 	print('\nSAM FILE\t\t\t1\t2')
-	for key in stats_dict_1:
+	for key in names_1:
 		if len(key) < 8:
 			print(
 				key + '\t\t\t\t' + 
@@ -210,7 +237,7 @@ def calc_print_stats():
 				str(stats_dict_2[key])
 			)
 	print('\nDIFFERENCE\t\t#\t%')
-	for key in diff_dict:
+	for key in names_2:
 		if len(key) < 8:
 			print(
 					key 
@@ -394,7 +421,6 @@ def main():
 		sys.exit(0)
 
 	master_dict_1 = {}
-	master_dict_2 = {}
 
 	SAM_file_1 = open_SAM_file(SAM_1_str)
 
@@ -420,7 +446,6 @@ def main():
 					FLAG_bin[-7],
 					1,
 					)
-				master_dict_1[header.header_name] = header
 			else:
 				SAM_rec_to_SAM_obj(
 					header, 
@@ -434,6 +459,9 @@ def main():
 	SAM_file_1.close()
 
 	SAM_file_2 = open_SAM_file(SAM_2_str)
+	header_count = 0
+	header = Header('')
+	prev_header = Header('')
 
 	for line in SAM_file_2:
 		fields = line.split()
@@ -443,13 +471,15 @@ def main():
 			if FLAG_bin[-1] == '0':
 				print(
 					"SAM files must contain paired end reads."
-					+ "Error: "
-					+ SAM_2_str
+					+ "Error: " + SAM_2_str
 				)
 				sys.exit(0)
-			header = Header(fields[0])
-			if header.header_name in master_dict_2:
-				header = master_dict_2[header.header_name]
+
+			if (prev_header.header_name == '' 
+				or prev_header.header_name != fields[0]):
+				header = Header(fields[0])
+				stats_dict_2['Headers']+=1
+
 				SAM_rec_to_SAM_obj(
 					header, 
 					fields, 
@@ -457,7 +487,15 @@ def main():
 					FLAG_bin[-7],
 					2,
 					)
-				master_dict_2[header.header_name] = header
+
+				if prev_header.header_name != '':
+					header_1 = master_dict_1.pop(prev_header.header_name)
+					if header_1 == prev_header:
+						pass
+					elif header_count < header_limit:
+						print(header_1)
+						print(prev_header)
+						header_count+=1	
 			else:
 				SAM_rec_to_SAM_obj(
 					header, 
@@ -466,23 +504,17 @@ def main():
 					FLAG_bin[-7],
 					2,
 					)
-				master_dict_2[header.header_name] = header
-				stats_dict_2['Headers']+=1
-	SAM_file_2.close()
+			prev_header = header
 
-	header_count = 0
-	keys_list = list(master_dict_1.keys())
-	while master_dict_1:
-		random_key = random.choice(keys_list)
-		keys_list.remove(random_key)
-		entry_1 = master_dict_1.pop(random_key)
-		entry_2 = master_dict_2.pop(random_key)
-		if entry_1 == entry_2:
-			continue
-		elif header_count < header_limit:
-			print(entry_1)
-			print(entry_2)
-			header_count+=1
+	header_1 = master_dict_1.pop(prev_header.header_name)
+	if header_1 == prev_header:
+		pass
+	elif header_count < header_limit:
+		print(header_1)
+		print(prev_header)
+		header_count+=1	
+	
+	SAM_file_2.close()
 
 	if not no_stats:
 		calc_print_stats()
