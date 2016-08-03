@@ -15,6 +15,8 @@ The script `compare.py` creates a dictionary of SAM headers objects that hold al
 	- Records
 	- Unmapped Alignments
 
+See Manual for an explanation of output.
+
 ##Version
 
 - Version 1.1 reduces the memory usage by 50% and reduces runtime significantly and supports both paired end and single end reads.

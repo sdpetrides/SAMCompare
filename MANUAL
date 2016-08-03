@@ -35,5 +35,35 @@ Commands and Options
 		-no_stats (optional)
 			# Does not print statistics
 
+Understanding Output
+
+	Headers
+		- Reports the number of unique headers
+		- Paired end read mates are both counted as the same header
+	Records
+		- Each line in alignment section in SAM file is a record
+		- Both mapped and unmapped reads count as a record
+	Records per Header
+		- Number of records / number of headers
+	Alignments
+		- Records that have been successfully mapped
+		- Based of 0x4 bit in FLAG 
+	Alignments per Header
+		- Number of alignments / number of headers
+	Unmapped
+		- Number of records - number of alignments
+
+	No change
+		- No difference between the headers' records
+	Number of Alignments
+		- Header in one file has different number of records than header in other file
+		- Checked before Mapped Position (higher hierarchy)
+	Mapped Position
+		- Difference in RNAME or POS for alignments in header
+		- To check mapped position, headers must have same amount of records
+		- Occurs when a record is unmapped in one file and mapped in another or when
+		  records are mapped to two different places
+
+
 
 

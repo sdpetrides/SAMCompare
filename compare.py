@@ -7,6 +7,11 @@ class SAMRecord:
 	"""Holds necessary information from SAM record"""
 	def __init__(self, FLAG, RNAME, POS, MAPQ, SAM_file, AS='', NM=''):
 		self.FLAG = FLAG
+		if FLAG[-3] == '0':
+			if SAM_file == 1:
+				stats_dict_1['Alignments']+=1
+			else:
+				stats_dict_2['Alignments']+=1
 		self.MAPQ = MAPQ
 		self.RNAME = RNAME
 		if len(POS) < 8:
@@ -15,10 +20,6 @@ class SAMRecord:
 			self.POS = POS
 		if AS != '':
 			self.AS = 'AS' + AS[4:]
-			if SAM_file == 1:
-				stats_dict_1['Alignments']+=1
-			else:
-				stats_dict_2['Alignments']+=1
 		else:
 			self.AS = AS
 		if NM != '':	
@@ -55,7 +56,11 @@ class Header:
 	"""Holds paired lists with records from a SAM file"""
 
 	def __init__(self, header_name):
-		self.header_name = header_name
+		header_name_list = header_name.split()
+		try:
+			self.header_name = header_name_list[0]
+		except:
+			self.header_name = header_name
 		self.first_ip_list = []
 		self.second_ip_list = []
 
@@ -117,7 +122,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 	try:
 		if FLAG_int & 64:
 			header.add_record(
-				SAMecord(
+				SAMRecord(
 					str(bin(FLAG_int)), 
 					fields[2], 
 					fields[3], 
@@ -125,7 +130,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 					SAM_file, 
 					AS=fields[11], 
 					NM=(fields[16], 
-					fields[17],
+						fields[17],
 					),
 				), 
 				1,
@@ -425,7 +430,7 @@ def main():
 	SAM_file_1 = open_SAM_file(SAM_1_str)
 
 	for line in SAM_file_1:
-		fields = line.split()
+		fields = line.split('\t')
 		first_word = fields[0]
 		if first_word[0] != '@':
 			FLAG_int = int(fields[1])
