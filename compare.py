@@ -3,15 +3,59 @@
 
 import sys
 
+stats_dict_1 = {
+	'Headers' : 0,
+	'Alignments' : 0,
+	'Alignments per Header' : '',
+	'Records per Header' : '',
+	'Records' : 0,
+	'Unmapped' : 0,
+	'Uniquely Unmapped': 0,
+}
+stats_dict_2 = {
+	'Headers' : 0,
+	'Alignments' : 0,
+	'Alignments per Header' : '',
+	'Records per Header' : '',
+	'Records' : 0,
+	'Unmapped' : 0,
+	'Uniquely Unmapped': 0,
+}
+diff_dict = {
+	'Number of Alignments' : 0,
+	'Mapped Position' : 0,
+	'Improved Alignment': 0,
+	'No Change' : 0,
+}
+unmapped_dict = {
+	'Header' : 0,
+}
+score_min = -46
+
 class SAMRecord:
 	"""Holds necessary information from SAM record"""
-	def __init__(self, FLAG, RNAME, POS, MAPQ, SAM_file, AS='', NM=''):
+	def __init__(self, header, FLAG, RNAME, POS, MAPQ, SAM_file, AS='', NM=''):
 		self.FLAG = FLAG
 		if FLAG[-3] == '0':
 			if SAM_file == 1:
 				stats_dict_1['Alignments']+=1
 			else:
 				stats_dict_2['Alignments']+=1
+		else:
+			if SAM_file == 1:
+				if header in unmapped_dict:
+					unmapped_dict[header]+=1
+				else:
+					unmapped_dict[header] = 1
+			else:
+				if header in unmapped_dict:
+					if unmapped_dict[header] == 1:
+						unmapped_dict.pop(header)
+					else:
+						unmapped_dict[header]-=1
+				else:
+					stats_dict_2['Uniquely Unmapped']+=1
+					# print(header)
 		self.MAPQ = MAPQ
 		self.RNAME = RNAME
 		if len(POS) < 8:
@@ -45,7 +89,9 @@ class SAMRecord:
 			)
 
 	def __eq__(self, other):
-		if self.RNAME != other.RNAME:
+		if (int(self.FLAG, 2) & 0x4) and (int(other.FLAG, 2) & 0x4):
+			return True
+		elif self.RNAME != other.RNAME:
 			return False
 		elif self.POS != other.POS:
 			return False
@@ -56,11 +102,8 @@ class Header:
 	"""Holds paired lists with records from a SAM file"""
 
 	def __init__(self, header_name):
-		header_name_list = header_name.split()
-		try:
-			self.header_name = header_name_list[0]
-		except:
-			self.header_name = header_name
+		header_name_tuple = header_name.partition(' ')
+		self.header_name = header_name_tuple[0]
 		self.first_ip_list = []
 		self.second_ip_list = []
 
@@ -98,31 +141,66 @@ class Header:
 			for record_other in other.first_ip_list:
 				if record_self == record_other:
 					match_count+=1
+					break
 
-		if match_count < match_threshold:
+		if match_count != match_threshold:
 			diff_dict['Mapped Position']+=1
+			diff_dict['Improved Alignment']+=compare_scores(self, other)
 			return False
 
 		match_count = 0
 		match_threshold = len(self.second_ip_list)	
+
 		for record_self in self.second_ip_list:
 			for record_other in other.second_ip_list:
 				if record_self == record_other:
 					match_count+=1
+					break
 
-		if match_count < match_threshold:
+		if match_count != match_threshold:
 			diff_dict['Mapped Position']+=1
+			diff_dict['Improved Alignment']+=compare_scores(self, other)
 			return False
 
 		diff_dict['No Change']+=1
 
 		return True
 
+def compare_scores(header_1, header_2):
+	align_score_1 = 0
+	align_score_2 = 0
+	unmapped_1 = 0
+	unmapped_2 = 0
+
+	for record in header_1.first_ip_list:
+		if record.AS:
+			align_score_1+=int(record.AS[3:])
+		else:
+			unmapped_1+=1
+	for record in header_1.second_ip_list:
+		if record.AS:
+			align_score_1+=int(record.AS[3:])
+		else:
+			unmapped_1+=1
+	for record in header_2.first_ip_list:
+		if record.AS:
+			align_score_2+=int(record.AS[3:])
+		else:
+			unmapped_2+=1
+	for record in header_2.second_ip_list:
+		if record.AS:
+			align_score_2+=int(record.AS[3:])
+		else:
+			unmapped_2+=1
+
+	return ((unmapped_1 * score_min) + align_score_1 < (unmapped_2 * score_min) + align_score_2)
+
 def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 	try:
 		if FLAG_int & 64:
 			header.add_record(
 				SAMRecord(
+					header.header_name,
 					str(bin(FLAG_int)), 
 					fields[2], 
 					fields[3], 
@@ -138,6 +216,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 		else:
 			header.add_record(
 				SAMRecord(
+					header.header_name,
 					str(bin(FLAG_int)),
 					fields[2], 
 					fields[3], 
@@ -154,6 +233,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 		if FLAG_int & 64:
 			header.add_record(
 				SAMRecord(
+					header.header_name,
 					str(bin(FLAG_int)), 
 					fields[2], 
 					fields[3], 
@@ -165,6 +245,7 @@ def SAM_rec_to_SAM_obj(header, fields, FLAG_int, SAM_file):
 		else:
 			header.add_record(
 				SAMRecord(
+					header.header_name,
 					str(bin(FLAG_int)),
 					fields[2], 
 					fields[3], 
@@ -182,12 +263,14 @@ def calc_print_stats():
 		'Alignments',
 		'Alignments per Header',
 		'Unmapped',
+		'Uniquely Unmapped',
 	]
 
 	names_2 = [
 		'No Change',
 		'Number of Alignments',
 		'Mapped Position',
+		'Improved Alignment',
 	]
 
 	stats_dict_1["Alignments per Header"] = str(
@@ -241,12 +324,12 @@ def calc_print_stats():
 				str(stats_dict_1[key]) + '\t' + 
 				str(stats_dict_2[key])
 			)
-	print('\nDIFFERENCE\t\t#\t%')
+	print('\nDIFFERENCE\t\t\t#\t%')
 	for key in names_2:
 		if len(key) < 8:
 			print(
 					key 
-					+ '\t\t\t' 
+					+ '\t\t\t\t' 
 					+ str(diff_dict[key]) 
 					+ '\t' 
 					+ str(
@@ -254,19 +337,12 @@ def calc_print_stats():
 							100*(diff_dict[key]/stats_dict_1['Headers']),
 						'.2f',
 						)
-					) 
-					+ '\t' 
-					+ str(
-						format(
-							100*(diff_dict[key]/stats_dict_2['Headers']),
-						'.2f',
-						)
 					)
 				)
 		elif len(key) < 16:
 			print(
 					key 
-					+ '\t\t' 
+					+ '\t\t\t' 
 					+ str(diff_dict[key]) 
 					+ '\t' 
 					+ str(
@@ -275,30 +351,16 @@ def calc_print_stats():
 							'.2f',
 						)
 					)
-					+ '\t' 
-					+ str(
-						format(
-							100 * (diff_dict[key] / stats_dict_2['Headers']),
-							'.2f',
-						)
-					)
 				)
 		else:
 			print(
 					key 
-					+ '\t' 
+					+ '\t\t' 
 					+ str(diff_dict[key]) 
 					+ '\t' 
 					+ str(
 						format(
 							100 * (diff_dict[key] / stats_dict_1['Headers']),
-							'.2f',
-						)
-					) 
-					+ '\t' 
-					+ str(
-						format(
-							100 * (diff_dict[key] / stats_dict_2['Headers']),
 							'.2f',
 						)
 					)
@@ -323,33 +385,8 @@ def open_SAM_file(SAM_str):
 		sys.exit(0)
 	return SAM_file
 
-
-stats_dict_1 = {
-	'Headers' : 0,
-	'Alignments' : 0,
-	'Alignments per Header' : '',
-	'Records per Header' : '',
-	'Records' : 0,
-	'Unmapped' : 0,
-}
-
-stats_dict_2 = {
-	'Headers' : 0,
-	'Alignments' : 0,
-	'Alignments per Header' : '',
-	'Records per Header' : '',
-	'Records' : 0,
-	'Unmapped' : 0,
-}
-
-diff_dict = {
-	'Number of Alignments' : 0,
-	'Mapped Position' : 0,
-	'No Change' : 0,
-}
-
 def main():
-
+	global score_min
 	argc = len(sys.argv)
 	param_set = set()
 	param_count = 1
@@ -376,6 +413,9 @@ def main():
 		"\n\t\t# Default is 0 example alignments to print", 
 		"\n\t-no_stats (optional)",
 		"\n\t\t# Does not print statistics"
+		"\n\t-score_min <int> (optional)",
+		"\n\t\t# Specifies the score-min for computing Improved Alignment"
+		"\n\t\t# Default is -46 or (-0.6 * 76)"
 	]
 
 	while param_count <= argc-1:
@@ -406,6 +446,10 @@ def main():
 				param_str = sys.argv[param_count]
 				param_count +=1
 				header_str = param_str
+			elif param_str == '-score_min':
+				param_str = sys.argv[param_count]
+				param_count +=1
+				score_min = int(param_str)
 			elif param_str == '-ex_count':
 				param_str = sys.argv[param_count]
 				param_count +=1
@@ -461,7 +505,7 @@ def main():
 	prev_header = Header('')
 
 	for line in SAM_file_2:
-		fields = line.split()
+		fields = line.split('\t')
 		first_word = fields[0]
 		if first_word[0] != '@':
 			FLAG_int = int(fields[1])
@@ -504,6 +548,12 @@ def main():
 		header_count+=1	
 	
 	SAM_file_2.close()
+
+	unmapped_count = 0;
+	for key in unmapped_dict:
+		unmapped_count+=unmapped_dict[key]
+	stats_dict_1['Uniquely Unmapped'] = unmapped_count
+	# print(unmapped_dict)
 
 	if not no_stats:
 		calc_print_stats()

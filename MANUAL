@@ -35,6 +35,10 @@ Commands and Options
 		-no_stats (optional)
 			# Does not print statistics
 
+		-score_min <int> (optional)
+			# Specifies the score-min for computing Improved Alignment
+			# Default is -46 or (-0.6 * 76)
+
 Understanding Output
 
 	Headers
@@ -52,6 +56,8 @@ Understanding Output
 		- Number of alignments / number of headers
 	Unmapped
 		- Number of records - number of alignments
+	Uniquely Unmapped
+		- Number of unmapped records that are mapped in the other file
 
 	No change
 		- No difference between the headers' records
@@ -63,7 +69,10 @@ Understanding Output
 		- To check mapped position, headers must have same amount of records
 		- Occurs when a record is unmapped in one file and mapped in another or when
 		  records are mapped to two different places
-
-
-
-
+	Improved Alignment
+		- If there is a difference in Mapped Position, the headers will be compared based on 
+		  alignment scores
+		- Unmapped reads are counted and the sum is multiplied by the score_min parameter
+		- Generally includes unmapped to mapped differences
+		- Default for the score_min parameter is -46 which is -0.6 * 76, the default score_min
+		  for Bowtie2 reads with length of 76 bases

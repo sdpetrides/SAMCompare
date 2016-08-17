@@ -3,10 +3,9 @@
 The script `compare.py` creates a dictionary of SAM headers objects that hold all of the records for each header. Each record contains a few significant fields: FLAG, MAPQ, RNAME, POS, AS, and NM. By comparing the header objects, SAMCompare helps to answer the following questions:
 	
 - Alignment Differences
-	- Lists FLAG, MAPQ, RNAME, POS, AS, NM for each alignment
-	- Statistics on differences in alignments
-		- Is the mapped position different?
-		- Has the number if alignments per header changed?
+	- Is the mapped position different?
+	- Is the total alignment better if the mapped position has changed?
+	- Has the number if alignments per header changed?
 - Statitics for each SAM file
 	- Headers 
 	- Alignments
@@ -14,11 +13,15 @@ The script `compare.py` creates a dictionary of SAM headers objects that hold al
 	- Records per Header
 	- Records
 	- Unmapped Alignments
+	- Uniquely Unmapped
+- Additional Features
+	- Lists FLAG, MAPQ, RNAME, POS, AS, and NM for headers that differ between files
 
 See Manual for an explanation of output.
 
 ##Version
 
+- Version 1.2 includes new statistics for each SAM and in the comparision of SAM files.
 - Version 1.1 reduces the memory usage by 50% and reduces runtime significantly and supports both paired end and single end reads.
 - Version 1.0 supports only paired end reads.
 
