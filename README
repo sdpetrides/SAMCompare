@@ -17,6 +17,8 @@ The script compare.py creates a dictionary of SAM headers objects that hold all 
 - Additional Features
 	- Lists FLAG, MAPQ, RNAME, POS, AS, and NM for headers that differ between files
 
+See Manual for an explanation of output.
+
 Version
 
 - Version 1.2 includes new statistics for each SAM and in the comparision of SAM files.
